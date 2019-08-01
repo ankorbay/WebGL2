@@ -15,5 +15,8 @@
   "bugs": {
     "url": "https://github.com/ankorbay/WebGL2/issues"
   },
-  "homepage": "https://github.com/ankorbay/WebGL2#readme"
+  "homepage": "https://github.com/ankorbay/WebGL2#readme",
+  "dependencies": {
+    "obj-file-parser": "^0.5.0"
+  }
 }
