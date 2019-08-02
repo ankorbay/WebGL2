@@ -131,6 +131,39 @@ function main() {
   requestAnimationFrame(drawScene);
 }
 
+const OBJFile = require('obj-file-parser');
+
+const fileContents = `
+# Blender v2.67 (sub 1) OBJ File: 'Crate1.blend'
+# www.blender.org
+mtllib Crate1.mtl
+o Cube_Cube.001
+v -1.000000 -1.000000 1.000000
+v -1.000000 -1.000000 -1.000000
+v 1.000000 -1.000000 -1.000000
+v 1.000000 -1.000000 1.000000
+v -1.000000 1.000000 1.000000
+v -1.000000 1.000000 -1.000000
+v 1.000000 1.000000 -1.000000
+v 1.000000 1.000000 1.000000
+vt 0.000000 0.000000
+vt 1.000000 0.000000
+vt 1.000000 1.000000
+vt 0.000000 1.000000
+usemtl Material.001
+s off
+f 5/1 6/2 2/3 1/4
+f 6/1 7/2 3/3 2/4
+f 7/1 8/2 4/3 3/4
+f 8/1 5/2 1/3 4/4
+f 1/1 2/2 3/3 4/4
+f 8/1 7/2 6/3 5/4
+`;
+
+const objFile = new OBJFile(fileContents);
+ 
+const output = objFile.parse();
+
 // Construct the cube from triangles
 function setGeometry(gl) {
   gl.bufferData(
