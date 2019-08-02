@@ -96,6 +96,28 @@ function main() {
     drawScene();
   }
   
+  var cameraPosition = [200,300,100];
+
+  document.addEventListener('keypress', moveCam);
+
+  function moveCam(e) {
+    if(e.code==="KeyS"){
+      cameraPosition[2] -= 50;
+      console.log(cameraPosition.toString());
+    } else if(e.code==="KeyW"){
+      cameraPosition[2] += 50;
+      console.log(cameraPosition.toString());
+    } else if(e.code==="KeyA"){
+      cameraPosition[0] -= 50;
+      console.log(cameraPosition.toString());
+    } else if(e.code==="KeyD"){
+      cameraPosition[0] += 50;
+      console.log(cameraPosition.toString());
+    }
+  }
+  console.log(cameraPosition.toString());
+  
+
   function drawScene(time) {
     var radius = 450+100 * Math.cos(time*0.001);
     webglUtils.resizeCanvasToDisplaySize(gl.canvas);
@@ -117,20 +139,10 @@ function main() {
     var zFar = 2000;
     var projectionMatrix = m4.perspective(fieldOfViewRadians, aspect, zNear, zFar);
 
-    var cubePosition = [450, 250, 0];
+    var cubePosition = [450, 250, 100];
     
     var cameraMatrix = m4.yRotation(cameraAngleRadians);
     cameraMatrix = m4.translate(cameraMatrix, 0, 50, radius * 1.5);
-
-    var cameraPosition = [200,300,100];
-
-    document.addEventListener('keypress', moveCam);
-
-    function moveCam(e) {
-      if(e.code==="KeyS"){
-        cameraPosition[1] += 10;
-      }
-    }
 
     var up = [0, 1, 0];
 
