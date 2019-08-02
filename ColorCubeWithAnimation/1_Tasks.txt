@@ -1,0 +1,4 @@
+- add camera view;
+- add camera control on keyboard (wasd);
+- load cube data as obj.
+- add texture and specular mask for it;
