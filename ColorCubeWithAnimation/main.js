@@ -29,6 +29,30 @@ void main() {
 `;
 
 function main() {
+
+  var objCoordsArray = [];
+  var texCoordsArray = [];
+  console.log(objCoordsArray);
+  var p = new Promise((resolve, reject) => {
+
+    var xhr = new XMLHttpRequest();
+
+    xhr.open("GET", "./Crate1.obj");
+    xhr.send();
+
+    xhr.addEventListener("load", (data) => {
+      resolve(data.currentTarget.response);
+    });
+  });
+  
+  p.then(data => {
+    var objFile = new OBJFile(data);
+    console.log(objFile.parse());
+    objCoordsArray.push(objFile.parse().models[0].vertices);
+    texCoordsArray.push(objFile.parse().models[0].textureCoords);
+  } );  
+
+
   /** @type {HTMLCanvasElement} */
   var canvas = document.getElementById("canvas");
   var gl = canvas.getContext("webgl2");
@@ -40,7 +64,7 @@ function main() {
       [vertexShaderSource, fragmentShaderSource]);
 
   var positionAttributeLocation = gl.getAttribLocation(program, "a_position");
-  var colorAttributeLocation = gl.getAttribLocation(program, "a_color");
+  var texcoordAttributeLocation = gl.getAttribLocation(program, "a_texcoord");
 
   var matrixLocation = gl.getUniformLocation(program, "u_matrix");
   var timeLocation = gl.getUniformLocation(program, "time");
@@ -55,7 +79,8 @@ function main() {
 
   gl.bindBuffer(gl.ARRAY_BUFFER, positionBuffer);
 
-  setGeometry(gl);
+  setGeometry(gl,objCoordsArray);
+  console.log(objCoordsArray);
 
   var size = 3;        
   var type = gl.FLOAT;   
@@ -65,20 +90,41 @@ function main() {
   gl.vertexAttribPointer(
       positionAttributeLocation, size, type, normalize, stride, offset);
 
-  var colorBuffer = gl.createBuffer();
-  gl.bindBuffer(gl.ARRAY_BUFFER, colorBuffer);
-  setColors(gl);
+  var texcoordBuffer = gl.createBuffer();
+  gl.bindBuffer(gl.ARRAY_BUFFER, texcoordBuffer);
+  setTexcoords(gl,texCoordsArray);
 
-  gl.enableVertexAttribArray(colorAttributeLocation);
+  gl.enableVertexAttribArray(texcoordAttributeLocation);
 
-  var size = 3;         
-  var type = gl.UNSIGNED_BYTE;  
+  var size = 2;         
+  var type = gl.FLOAT;  
   var normalize = true;  
   var stride = 0;        
   var offset = 0;        
   gl.vertexAttribPointer(
-      colorAttributeLocation, size, type, normalize, stride, offset);
+    texcoordAttributeLocation, size, type, normalize, stride, offset);
 
+  var texture = gl.createTexture();
+
+  // use texture unit 0
+  gl.activeTexture(gl.TEXTURE0 + 0);
+
+  // bind to the TEXTURE_2D bind point of texture unit 0
+  gl.bindTexture(gl.TEXTURE_2D, texture);
+
+  // Fill the texture with a 1x1 blue pixel.
+  gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA, 1, 1, 0, gl.RGBA, gl.UNSIGNED_BYTE,
+                new Uint8Array([0, 0, 255, 255]));
+
+  // Asynchronously load an image
+  var image = new Image();
+  image.src = "./container2.png";
+  image.addEventListener('load', function() {
+    // Now that the image has loaded make copy it to the texture.
+    gl.bindTexture(gl.TEXTURE_2D, texture);
+    gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA, gl.RGBA, gl.UNSIGNED_BYTE, image);
+    gl.generateMipmap(gl.TEXTURE_2D);
+  });
 
   function radToDeg(r) {
     return r * 180 / Math.PI;
@@ -90,17 +136,12 @@ function main() {
 
   var fieldOfViewRadians = degToRad(100);
   var cameraAngleRadians = degToRad(100);
-
-  function updateCameraAngle(event, ui) {
-    cameraAngleRadians = degToRad(ui.value);
-    drawScene();
-  }
   
   var cameraPosition = [200,300,100];
 
   document.addEventListener('keypress', moveCam);
 
-  function moveCam(e) {
+  function moveCam(e) { // Push to move the cam : A - left, D - right, W - forward, S - back, P - up, L - down
     if(e.code==="KeyS"){
       cameraPosition[2] -= 50;
       console.log(cameraPosition.toString());
@@ -112,6 +153,12 @@ function main() {
       console.log(cameraPosition.toString());
     } else if(e.code==="KeyD"){
       cameraPosition[0] += 50;
+      console.log(cameraPosition.toString());
+    } else if(e.code==="KeyP"){
+      cameraPosition[1] += 50;
+      console.log(cameraPosition.toString());
+    } else if(e.code==="KeyL"){
+      cameraPosition[1] -= 50;
       console.log(cameraPosition.toString());
     }
   }
@@ -139,14 +186,14 @@ function main() {
     var zFar = 2000;
     var projectionMatrix = m4.perspective(fieldOfViewRadians, aspect, zNear, zFar);
 
-    var cubePosition = [450, 250, 100];
+    var cubeStartPosition = [450, 250, 100];
     
     var cameraMatrix = m4.yRotation(cameraAngleRadians);
     cameraMatrix = m4.translate(cameraMatrix, 0, 50, radius * 1.5);
 
     var up = [0, 1, 0];
 
-    var cameraMatrix = m4.lookAt(cameraPosition, cubePosition, up);
+    var cameraMatrix = m4.lookAt(cameraPosition, cubeStartPosition, up);
 
     var viewMatrix = m4.inverse(cameraMatrix);
 
@@ -170,7 +217,7 @@ function main() {
 
     var primitiveType = gl.TRIANGLES;
     var offset = 0;
-    var count = 6 * 6;
+    var count = 8;
     gl.drawArrays(primitiveType, offset, count);
     
     requestAnimationFrame(drawScene);
@@ -179,107 +226,24 @@ function main() {
 }
 
 // Construct the cube from triangles
-function setGeometry(gl) {
+function setGeometry(gl,object) {
+  var newarr = [];
+  for (dict in object){
+    for(value in dict){
+      newarr.push(object.dict.value);
+    }
+  };
+  console.log(newarr)
   gl.bufferData(
       gl.ARRAY_BUFFER,
-      new Float32Array([
-
-          50, 0,   0,
-          50, 50, 0,
-          0,   50, 0,
-          0,   50, 0,
-          0,   0,   0,
-          50, 0,   0,
-
-
-          0,   0,  0,
-          50, 0,  0,
-          50, 0,  50,
-          50, 0,  50,
-          0,   0,  50,
-          0,   0,  0,
-
-          
-          0,   0,   0,
-          0,   50, 0,
-          0,   50, 50,
-          0,   50, 50,
-          0,   0,   50,
-          0,   0,   0,
-
-
-          0,   50,  0,
-          50, 50,  0,
-          50, 50,  50,
-          50, 50,  50,
-          0,   50,  50,
-          0,   50,  0,
-
-
-          50,   0,   0,
-          50,   50,   0,
-          50,   50,  50,
-          50,   50,  50,
-          50,   0,  50,
-          50,   0,  0,
-
-          0,   0,   50,
-          0,   50, 50,
-          50, 50, 50,
-          50, 50, 50,
-          50, 0,   50,
-          0,   0,   50,
-      ]),
+      new Float32Array(newarr), // TODO: iterate throught array to push data from dicts inside it to Float32Array() 
       gl.STATIC_DRAW);
 }
 
-// Fill the current ARRAY_BUFFER buffer with colors for the cube.
-function setColors(gl) {
+function setTexcoords(gl,array) {
   gl.bufferData(
       gl.ARRAY_BUFFER,
-      new Uint8Array([
-        50,  70, 0,
-        50,  70, 0,
-        50,  70, 0,
-        50,  70, 0,
-        50,  70, 0,
-        50,  70, 0,
-
-        80, 70, 50,
-        80, 70, 50,
-        80, 70, 50,
-        80, 70, 50,
-        80, 70, 50,
-        80, 70, 50,
-          
-        70, 50, 210,
-        70, 50, 210,
-        70, 50, 210,
-        70, 50, 210,
-        70, 50, 210,
-        70, 50, 210,
-
-        50, 50, 70,
-        50, 50, 70,
-        50, 50, 70,
-        50, 50, 70,
-        50, 50, 70,
-        50, 50, 70,
-
-        20, 100, 70,
-        20, 100, 70,
-        20, 100, 70,
-        20, 100, 70,
-        20, 100, 70,
-        20, 100, 70,
-
-        80, 0, 50,
-        80, 0, 50,
-        80, 0, 50,
-        80, 0, 50,
-        80, 0, 50,
-        80, 0, 50,
-      ]),
+      new Float32Array(array),
       gl.STATIC_DRAW);
 }
 
