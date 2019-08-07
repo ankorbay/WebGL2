@@ -35,14 +35,14 @@ function main() {
   if (!gl) {
     return;
   }
-  const vertexShader = new Shader(gl,gl.VERTEX_SHADER,vertexShaderSource);
-  const fragmentShader = new Shader(gl,gl.FRAGMENT_SHADER,fragmentShaderSource);
+  const vertexShader = new Shader(gl,'VERTEX',vertexShaderSource);
+  const fragmentShader = new Shader(gl,'FRAGMENT',fragmentShaderSource);
 
-  const program = new ProgramFromSources(gl,vertexShader,fragmentShader);
+  const program = new Program(gl,vertexShader,fragmentShader);
 
-  const positionAttributeLocation = new Attribute(gl, program, "a_position");
-  const colorAttributeLocation = new Attribute(gl, program, "a_color");
-
+  const positionAttributeLocation = gl.getAttribLocation(program, "a_position");
+  const colorAttributeLocation = gl.getAttribLocation(program, "a_color");
+  
   var matrixLocation = gl.getUniformLocation(program, "u_matrix");
   var timeLocation = gl.getUniformLocation(program, "time");
   
@@ -66,8 +66,8 @@ function main() {
   gl.vertexAttribPointer(
       positionAttributeLocation, size, type, normalize, stride, offset);
 
-  var texcoordBuffer = gl.createBuffer();
-  gl.bindBuffer(gl.ARRAY_BUFFER, texcoordBuffer);
+  var colorsBuffer = gl.createBuffer();
+  gl.bindBuffer(gl.ARRAY_BUFFER, colorsBuffer);
   setColors(gl);
 
   gl.enableVertexAttribArray(colorAttributeLocation);
