@@ -55,20 +55,17 @@ class Shader {
 }
 class ProgramFromSources {
   constructor(gl, vertexShaderSource, fragmentShaderSource) {
-    this.gl = gl;
-    this.vertexAttribPointer = vertexShaderSource;
-    this.fragmentShader = fragmentShaderSource;
-  }
-
-  createProgram() {
     const program = gl.createProgram();
-    const vertexShader = new Shader(this.gl,gl.VERTEX_SHADER,this.logvertexShaderSource);
-    const fragmentShader = new Shader(this.gl,gl.FRAGMENT_SHADER,this.vertexShaderSource);
+    const vertexShader = new Shader(gl,gl.VERTEX_SHADER,vertexShaderSource);
+    const fragmentShader = new Shader(gl,gl.FRAGMENT_SHADER,fragmentShaderSource);
 
     gl.attachShader(program, vertexShader);
     gl.attachShader(program, fragmentShader);
     gl.linkProgram(program);
     return program;
+  }
+  get(){
+    return this.program;
   }
 }
   
@@ -110,7 +107,6 @@ function main() {
   }
 
   var program = new ProgramFromSources(gl,vertexShaderSource,fragmentShaderSource);
-  console.log(program);
 
   var positionAttributeLocation = gl.getAttribLocation(program, "a_position");
   var texcoordAttributeLocation = gl.getAttribLocation(program, "a_texcoord");
@@ -128,7 +124,7 @@ function main() {
 
   gl.bindBuffer(gl.ARRAY_BUFFER, positionBuffer);
 
-  setGeometry(gl, objCoordsArray);
+  setGeometry(gl);
 
   var size = 3;        
   var type = gl.FLOAT;   
@@ -140,7 +136,7 @@ function main() {
 
   var texcoordBuffer = gl.createBuffer();
   gl.bindBuffer(gl.ARRAY_BUFFER, texcoordBuffer);
-  setTexcoords(gl,texCoordsArray);
+  setColors(gl);
 
   gl.enableVertexAttribArray(texcoordAttributeLocation);
 
@@ -265,7 +261,7 @@ function main() {
 
     var primitiveType = gl.TRIANGLES;
     var offset = 0;
-    var count = 8;
+    var count = 6 * 6;
     gl.drawArrays(primitiveType, offset, count);
     
     requestAnimationFrame(drawScene);
@@ -274,26 +270,107 @@ function main() {
 }
 
 // Construct the cube from triangles
-function setGeometry(gl,object) {
-  var objCopy = object;
-  
-  var newarr = [];
-  
-  for (var i = 0; i < objCopy[0].length; i++){
-    for(value in objCopy[i]){
-      newarr.push(1);
-    }
-  };
+function setGeometry(gl) {
   gl.bufferData(
       gl.ARRAY_BUFFER,
-      new Float32Array(newarr), // TODO: iterate throught array to push data from dicts inside it to Float32Array() 
+      new Float32Array([
+
+          50, 0,   0,
+          50, 50, 0,
+          0,   50, 0,
+          0,   50, 0,
+          0,   0,   0,
+          50, 0,   0,
+
+
+          0,   0,  0,
+          50, 0,  0,
+          50, 0,  50,
+          50, 0,  50,
+          0,   0,  50,
+          0,   0,  0,
+
+          
+          0,   0,   0,
+          0,   50, 0,
+          0,   50, 50,
+          0,   50, 50,
+          0,   0,   50,
+          0,   0,   0,
+
+
+          0,   50,  0,
+          50, 50,  0,
+          50, 50,  50,
+          50, 50,  50,
+          0,   50,  50,
+          0,   50,  0,
+
+
+          50,   0,   0,
+          50,   50,   0,
+          50,   50,  50,
+          50,   50,  50,
+          50,   0,  50,
+          50,   0,  0,
+
+          0,   0,   50,
+          0,   50, 50,
+          50, 50, 50,
+          50, 50, 50,
+          50, 0,   50,
+          0,   0,   50,
+      ]),
       gl.STATIC_DRAW);
 }
 
-function setTexcoords(gl,array) {
+// Fill the current ARRAY_BUFFER buffer with colors for the cube.
+function setColors(gl) {
   gl.bufferData(
       gl.ARRAY_BUFFER,
-      new Float32Array(array),
+      new Uint8Array([
+        50,  70, 0,
+        50,  70, 0,
+        50,  70, 0,
+        50,  70, 0,
+        50,  70, 0,
+        50,  70, 0,
+
+        80, 70, 50,
+        80, 70, 50,
+        80, 70, 50,
+        80, 70, 50,
+        80, 70, 50,
+        80, 70, 50,
+          
+        70, 50, 210,
+        70, 50, 210,
+        70, 50, 210,
+        70, 50, 210,
+        70, 50, 210,
+        70, 50, 210,
+
+        50, 50, 70,
+        50, 50, 70,
+        50, 50, 70,
+        50, 50, 70,
+        50, 50, 70,
+        50, 50, 70,
+
+        20, 100, 70,
+        20, 100, 70,
+        20, 100, 70,
+        20, 100, 70,
+        20, 100, 70,
+        20, 100, 70,
+
+        80, 0, 50,
+        80, 0, 50,
+        80, 0, 50,
+        80, 0, 50,
+        80, 0, 50,
+        80, 0, 50,
+      ]),
       gl.STATIC_DRAW);
 }
 
