@@ -27,89 +27,21 @@ void main() {
   outColor = v_color;
 }
 `;
-
-function assertType(instanceObject, instance) {
-  if (!(instanceObject instanceof instance)) {
-    throw new Error(`got type ${instanceObject instanceof instance} but expected ${instance};`);
-  }
-}
-class Shader {
-  constructor(gl, shaderType, shaderSource) {
-    const shader = gl.createShader(shaderType);
-    console.log('ooo');
-    gl.shaderSource(shader, shaderSource);
-    gl.compileShader(shader);
-    const compiled = gl.getShaderParameter(shader, gl.COMPILE_STATUS);
-    if (!compiled) {
-      const lastError = gl.getShaderInfoLog(shader);
-      console.log("*** Error compiling shader '" + shader + "':" + lastError);
-      gl.deleteShader(shader);
-      return null;
-    }
-    return shader;
-  }
-
-  get (){
-    return this.shader;
-  }
-}
-class ProgramFromSources {
-  constructor(gl, vertexShaderSource, fragmentShaderSource) {
-    const program = gl.createProgram();
-    const vertexShader = new Shader(gl,gl.VERTEX_SHADER,vertexShaderSource);
-    const fragmentShader = new Shader(gl,gl.FRAGMENT_SHADER,fragmentShaderSource);
-
-    gl.attachShader(program, vertexShader);
-    gl.attachShader(program, fragmentShader);
-    gl.linkProgram(program);
-    return program;
-  }
-  get(){
-    return this.program;
-  }
-}
   
 function main() {
-
-  var objCoordsArray = [];
-  var texCoordsArray = [];
-
-  var p = new Promise((resolve, reject) => {  
-
-    var xhr = new XMLHttpRequest();
-
-    xhr.open("GET", "./Crate1.obj");
-    xhr.send();
-
-    xhr.addEventListener("load", (data) => {
-      resolve(data.currentTarget.response);
-    });
-  });
-  
-  p.then(data => {
-    var objFile = new OBJFile(data);
-    const objFileData = objFile.parse();
-    
-
-    objCoordsArray.push(objFile.parse().models[0].vertices);
-    texCoordsArray.push(objFile.parse().models[0].textureCoords);
-    
-  } );
-
-
-  //start
-
-  /** @type {HTMLCanvasElement} */
-  var canvas = document.getElementById("canvas");
-  var gl = canvas.getContext("webgl2");
+  const canvas = document.getElementById("canvas");
+  const gl = canvas.getContext("webgl2");
+  console.log(gl instanceof WebGL2RenderingContext);
   if (!gl) {
     return;
   }
+  const vertexShader = new Shader(gl,gl.VERTEX_SHADER,vertexShaderSource);
+  const fragmentShader = new Shader(gl,gl.FRAGMENT_SHADER,fragmentShaderSource);
 
-  var program = new ProgramFromSources(gl,vertexShaderSource,fragmentShaderSource);
+  const program = new ProgramFromSources(gl,vertexShader,fragmentShader);
 
-  var positionAttributeLocation = gl.getAttribLocation(program, "a_position");
-  var texcoordAttributeLocation = gl.getAttribLocation(program, "a_texcoord");
+  const positionAttributeLocation = new Attribute(gl, program, "a_position");
+  const colorAttributeLocation = new Attribute(gl, program, "a_color");
 
   var matrixLocation = gl.getUniformLocation(program, "u_matrix");
   var timeLocation = gl.getUniformLocation(program, "time");
@@ -138,15 +70,15 @@ function main() {
   gl.bindBuffer(gl.ARRAY_BUFFER, texcoordBuffer);
   setColors(gl);
 
-  gl.enableVertexAttribArray(texcoordAttributeLocation);
+  gl.enableVertexAttribArray(colorAttributeLocation);
 
-  var size = 2;         
-  var type = gl.FLOAT;  
+  var size = 3;         
+  var type = gl.UNSIGNED_BYTE;  
   var normalize = true;  
   var stride = 0;        
   var offset = 0;        
   gl.vertexAttribPointer(
-    texcoordAttributeLocation, size, type, normalize, stride, offset);
+    colorAttributeLocation, size, type, normalize, stride, offset);
 
   var texture = gl.createTexture();
 
@@ -206,7 +138,8 @@ function main() {
       console.log(cameraPosition.toString());
     }
   }
-  console.log(cameraPosition.toString());
+  console.log(`Camera is ON. Start position is: [${cameraPosition.toString()}]/n
+  Use W/A/S/D and P/L to move it fwd/left/back/back and up/down respectively`);
   
 
   function drawScene(time) {
