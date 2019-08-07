@@ -1,0 +1,102 @@
+
+// class Uniform {
+//   uniformIndex_;
+//   constructor(shader, name);
+//   get();
+// }
+// class attribute {
+//   constructor (name) {
+//     this.name = name;
+//   }
+
+//   set 
+// }
+
+// class BaseBuffer {
+
+// }
+
+
+// class ArrayObject {
+//   // ebo, eao, vert, uv, index, normals
+//   bind();
+//   unbind();
+// }
+
+// const arObj = new ArrayObject();
+
+// class ArrayBuffer extends BaseBuffer {
+// }
+
+// class BaseTexture {
+//   index = null;
+//   bind();
+//   unbind();
+// }
+
+// class Textre2D extends BaseTexture {
+// }
+
+// class Mesh {
+//   _arrayObject;
+//   _textures = [];
+//   shaderProgram;
+//   constructor() {
+//     _arrayObject();
+//   }
+//   draw();
+// }
+
+// class Model {
+//   static load();
+//   draw();
+// }
+// var model = Model.load("url")
+// .then(() => {
+//   model.draw();
+// });
+
+// class Scene {
+//   static create(callback);
+// }
+
+// class Loader {
+//   data = {
+//     "objfile1": "asdasdasd",
+//     "image1": "asdasdas"
+//   };
+//   static loadFile();
+//   static loadImage();
+//   getData();
+// };
+
+
+// function getData(params) {
+// }
+
+
+  // var m1, m2;
+
+  // Scene.create(() => {
+  //   m1.draw();
+  //   m2.draw();
+  // });
+
+
+
+  // function main() {
+  //   const m1, m2, m3;
+
+  //   Model.load("./model1.obj", "vShader.vert", "fShader.frag")
+  //   .then(mdl => m1 = mdl)
+  //   .then(Model.load("./model2.obj", "vShader.vert", "fShader.frag"))
+  //   .then(mdl2 => m2 = mdl2);
+
+  //   Scene.create(() => {
+  //     m1.draw();
+  //     m2.draw();
+
+  //     ...
+  //   });
+
+  // }

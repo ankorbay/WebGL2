@@ -28,12 +28,56 @@ void main() {
 }
 `;
 
+function assertType(instanceObject, instance) {
+  if (!(instanceObject instanceof instance)) {
+    throw new Error(`got type ${instanceObject instanceof instance} but expected ${instance};`);
+  }
+}
+class Shader {
+  constructor(gl, shaderType, shaderSource) {
+    const shader = gl.createShader(shaderType);
+    console.log('ooo');
+    gl.shaderSource(shader, shaderSource);
+    gl.compileShader(shader);
+    const compiled = gl.getShaderParameter(shader, gl.COMPILE_STATUS);
+    if (!compiled) {
+      const lastError = gl.getShaderInfoLog(shader);
+      console.log("*** Error compiling shader '" + shader + "':" + lastError);
+      gl.deleteShader(shader);
+      return null;
+    }
+    return shader;
+  }
+
+  get (){
+    return this.shader;
+  }
+}
+class ProgramFromSources {
+  constructor(gl, vertexShaderSource, fragmentShaderSource) {
+    this.gl = gl;
+    this.vertexAttribPointer = vertexShaderSource;
+    this.fragmentShader = fragmentShaderSource;
+  }
+
+  createProgram() {
+    const program = gl.createProgram();
+    const vertexShader = new Shader(this.gl,gl.VERTEX_SHADER,this.logvertexShaderSource);
+    const fragmentShader = new Shader(this.gl,gl.FRAGMENT_SHADER,this.vertexShaderSource);
+
+    gl.attachShader(program, vertexShader);
+    gl.attachShader(program, fragmentShader);
+    gl.linkProgram(program);
+    return program;
+  }
+}
+  
 function main() {
 
   var objCoordsArray = [];
   var texCoordsArray = [];
-  console.log(objCoordsArray);
-  var p = new Promise((resolve, reject) => {
+
+  var p = new Promise((resolve, reject) => {  
 
     var xhr = new XMLHttpRequest();
 
@@ -47,11 +91,16 @@ function main() {
   
   p.then(data => {
     var objFile = new OBJFile(data);
-    console.log(objFile.parse());
+    const objFileData = objFile.parse();
+    
+
     objCoordsArray.push(objFile.parse().models[0].vertices);
     texCoordsArray.push(objFile.parse().models[0].textureCoords);
-  } );  
+    
+  } );
 
+
+  //start
 
   /** @type {HTMLCanvasElement} */
   var canvas = document.getElementById("canvas");
@@ -60,8 +109,8 @@ function main() {
     return;
   }
 
-  var program = webglUtils.createProgramFromSources(gl,
-      [vertexShaderSource, fragmentShaderSource]);
+  var program = new ProgramFromSources(gl,vertexShaderSource,fragmentShaderSource);
+  console.log(program);
 
   var positionAttributeLocation = gl.getAttribLocation(program, "a_position");
   var texcoordAttributeLocation = gl.getAttribLocation(program, "a_texcoord");
@@ -79,8 +128,7 @@ function main() {
 
   gl.bindBuffer(gl.ARRAY_BUFFER, positionBuffer);
 
-  setGeometry(gl,objCoordsArray);
-  console.log(objCoordsArray);
+  setGeometry(gl, objCoordsArray);
 
   var size = 3;        
   var type = gl.FLOAT;   
@@ -227,13 +275,15 @@ function main() {
 
 // Construct the cube from triangles
 function setGeometry(gl,object) {
+  var objCopy = object;
+  
   var newarr = [];
-  for (dict in object){
-    for(value in dict){
-      newarr.push(object.dict.value);
+  
+  for (var i = 0; i < objCopy[0].length; i++){
+    for(value in objCopy[i]){
+      newarr.push(1);
     }
   };
-  console.log(newarr)
   gl.bufferData(
       gl.ARRAY_BUFFER,
       new Float32Array(newarr), // TODO: iterate throught array to push data from dicts inside it to Float32Array() 

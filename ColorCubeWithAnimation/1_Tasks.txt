@@ -1,5 +1,9 @@
-- add camera view;
-- add camera control on keyboard (wasd);
-- load cube data as obj.
-- add texture and specular mask for it;
-- add 1 directional light and 3 points.
+- add camera view; - DONE
+- add camera control on keyboard (wasd); - DONE
+- load cube data as obj. - ON HOLD
+- add texture and specular mask for it; - ON HOLD
+- add 1 directional light and 3 points. - ON HOLD
+
+TODAY:
+
+- create program and shader classes, intergrate into main.js - IN PROCESS
