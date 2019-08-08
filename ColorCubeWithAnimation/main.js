@@ -31,9 +31,9 @@ void main() {
 function main() {
   const canvas = document.getElementById("canvas");
   const gl = canvas.getContext("webgl2");
-  console.log(gl instanceof WebGL2RenderingContext);
-  if (!gl) {
-    return;
+  
+  if (!gl || !(gl instanceof WebGL2RenderingContext)) {
+    throw new Error('WebGL context is not defined');
   }
   const vertexShader = new Shader(gl,'VERTEX',vertexShaderSource);
   const fragmentShader = new Shader(gl,'FRAGMENT',fragmentShaderSource);
@@ -43,12 +43,11 @@ function main() {
   const positionAttributeLocation = gl.getAttribLocation(program, "a_position");
   const colorAttributeLocation = gl.getAttribLocation(program, "a_color");
   
-  var matrixLocation = gl.getUniformLocation(program, "u_matrix");
-  var timeLocation = gl.getUniformLocation(program, "time");
+  const matrixLocation = gl.getUniformLocation(program, "u_matrix");
   
-  var positionBuffer = gl.createBuffer();
+  const positionBuffer = gl.createBuffer();
 
-  var vao = gl.createVertexArray();
+  const vao = gl.createVertexArray();
 
   gl.bindVertexArray(vao);
 
@@ -58,49 +57,46 @@ function main() {
 
   setGeometry(gl);
 
-  var size = 3;        
-  var type = gl.FLOAT;   
-  var normalize = false; 
-  var stride = 0;        
-  var offset = 0;        
-  gl.vertexAttribPointer(
-      positionAttributeLocation, size, type, normalize, stride, offset);
+  let size = 3;        
+  let type = gl.FLOAT;   
+  let normalize = false; 
+  let stride = 0;        
+  let offset = 0;        
+  gl.vertexAttribPointer(positionAttributeLocation, size, type, normalize, stride, offset);
 
-  var colorsBuffer = gl.createBuffer();
+  const colorsBuffer = gl.createBuffer();
   gl.bindBuffer(gl.ARRAY_BUFFER, colorsBuffer);
   setColors(gl);
-
   gl.enableVertexAttribArray(colorAttributeLocation);
+  
+  size = 3;
+  type = gl.UNSIGNED_BYTE;  
+  normalize = true;  
+  stride = 0;        
+  offset = 0;        
+  gl.vertexAttribPointer(colorAttributeLocation, size, type, normalize, stride, offset);
 
-  var size = 3;         
-  var type = gl.UNSIGNED_BYTE;  
-  var normalize = true;  
-  var stride = 0;        
-  var offset = 0;        
-  gl.vertexAttribPointer(
-    colorAttributeLocation, size, type, normalize, stride, offset);
+  // const texture = gl.createTexture();
 
-  var texture = gl.createTexture();
+  // // use texture unit 0
+  // gl.activeTexture(gl.TEXTURE0 + 0);
 
-  // use texture unit 0
-  gl.activeTexture(gl.TEXTURE0 + 0);
+  // // bind to the TEXTURE_2D bind point of texture unit 0
+  // gl.bindTexture(gl.TEXTURE_2D, texture);
 
-  // bind to the TEXTURE_2D bind point of texture unit 0
-  gl.bindTexture(gl.TEXTURE_2D, texture);
+  // // Fill the texture with a 1x1 blue pixel.
+  // gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA, 1, 1, 0, gl.RGBA, gl.UNSIGNED_BYTE,
+  //               new Uint8Array([0, 0, 255, 255]));
 
-  // Fill the texture with a 1x1 blue pixel.
-  gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA, 1, 1, 0, gl.RGBA, gl.UNSIGNED_BYTE,
-                new Uint8Array([0, 0, 255, 255]));
-
-  // Asynchronously load an image
-  var image = new Image();
-  image.src = "./container2.png";
-  image.addEventListener('load', function() {
-    // Now that the image has loaded make copy it to the texture.
-    gl.bindTexture(gl.TEXTURE_2D, texture);
-    gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA, gl.RGBA, gl.UNSIGNED_BYTE, image);
-    gl.generateMipmap(gl.TEXTURE_2D);
-  });
+  // // Asynchronously load an image
+  // const image = new Image();
+  // image.src = "./container2.png";
+  // image.addEventListener('load', function() {
+  //   // Now that the image has loaded make copy it to the texture.
+  //   gl.bindTexture(gl.TEXTURE_2D, texture);
+  //   gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA, gl.RGBA, gl.UNSIGNED_BYTE, image);
+  //   gl.generateMipmap(gl.TEXTURE_2D);
+  // });
 
   function radToDeg(r) {
     return r * 180 / Math.PI;
@@ -110,10 +106,10 @@ function main() {
     return d * Math.PI / 180;
   }
 
-  var fieldOfViewRadians = degToRad(100);
-  var cameraAngleRadians = degToRad(100);
+  const fieldOfViewRadians = degToRad(100);
+  const cameraAngleRadians = degToRad(100);
   
-  var cameraPosition = [200,300,100];
+  const cameraPosition = [200,300,100];
 
   document.addEventListener('keypress', moveCam);
 
@@ -139,11 +135,11 @@ function main() {
     }
   }
   console.log(`Camera is ON. Start position is: [${cameraPosition.toString()}]/n
-  Use W/A/S/D and P/L to move it fwd/left/back/back and up/down respectively`);
+  Use keyboard W/A/S/D and P/L to move it fwd/left/back/back and up/down respectively`);
   
 
   function drawScene(time) {
-    var radius = 450+100 * Math.cos(time*0.001);
+    const radius = 450+100 * Math.cos(time*0.001);
     webglUtils.resizeCanvasToDisplaySize(gl.canvas);
     
     gl.viewport(0, 0, gl.canvas.width, gl.canvas.height);
@@ -158,31 +154,29 @@ function main() {
 
     gl.bindVertexArray(vao);
 
-    var aspect = gl.canvas.clientWidth / gl.canvas.clientHeight;
-    var zNear = 1;
-    var zFar = 2000;
-    var projectionMatrix = m4.perspective(fieldOfViewRadians, aspect, zNear, zFar);
+    const aspect = gl.canvas.clientWidth / gl.canvas.clientHeight;
+    const zNear = 1;
+    const zFar = 2000;
+    const projectionMatrix = m4.perspective(fieldOfViewRadians, aspect, zNear, zFar);
 
-    var cubeStartPosition = [450, 250, 100];
+    const cubeStartPosition = [450, 250, 100];
     
-    var cameraMatrix = m4.yRotation(cameraAngleRadians);
+    let cameraMatrix = m4.yRotation(cameraAngleRadians);
     cameraMatrix = m4.translate(cameraMatrix, 0, 50, radius * 1.5);
 
-    var up = [0, 1, 0];
+    const up = [0, 1, 0];
 
-    var cameraMatrix = m4.lookAt(cameraPosition, cubeStartPosition, up);
+    cameraMatrix = m4.lookAt(cameraPosition, cubeStartPosition, up);
 
-    var viewMatrix = m4.inverse(cameraMatrix);
+    const viewMatrix = m4.inverse(cameraMatrix);
 
-    var viewProjectionMatrix = m4.multiply(projectionMatrix,viewMatrix);
+    const viewProjectionMatrix = m4.multiply(projectionMatrix,viewMatrix);
 
-    gl.uniform1f(timeLocation, time * 0.001);
+    const translation = [450+100 * Math.cos(time*0.001), 250+100*Math.sin(time*0.001), 0];
+    const rotation = [degToRad(360*Math.sin(time*0.0005)), degToRad(360*Math.sin(time*0.0001)), degToRad(360*Math.sin(time*0.0003))];
+    const scaling = [Math.abs(Math.sin(time*0.001)),Math.abs(Math.sin(time*0.001)),Math.abs(Math.sin(time*0.001))];
 
-    var translation = [450+100 * Math.cos(time*0.001), 250+100*Math.sin(time*0.001), 0];
-    var rotation = [degToRad(360*Math.sin(time*0.0005)), degToRad(360*Math.sin(time*0.0001)), degToRad(360*Math.sin(time*0.0003))];
-    var scaling = [Math.abs(Math.sin(time*0.001)),Math.abs(Math.sin(time*0.001)),Math.abs(Math.sin(time*0.001))];
-
-    var matrix = viewProjectionMatrix;
+    let matrix = viewProjectionMatrix;
 
     matrix = m4.translate(matrix, translation[0], translation[1], translation[2]);
     matrix = m4.xRotate(matrix, rotation[0]);
@@ -192,9 +186,9 @@ function main() {
 
     gl.uniformMatrix4fv(matrixLocation, false, matrix);
 
-    var primitiveType = gl.TRIANGLES;
-    var offset = 0;
-    var count = 6 * 6;
+    const primitiveType = gl.TRIANGLES;
+    const offset = 0;
+    const count = 6 * 6;
     gl.drawArrays(primitiveType, offset, count);
     
     requestAnimationFrame(drawScene);
@@ -307,7 +301,7 @@ function setColors(gl) {
       gl.STATIC_DRAW);
 }
 
-var m4 = {
+const m4 = {
 
   perspective: function(fieldOfViewInRadians, aspect, near, far) {
     var f = Math.tan(Math.PI * 0.5 - 0.5 * fieldOfViewInRadians);
