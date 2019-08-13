@@ -1,16 +1,35 @@
+// var objCoordsArray = [];
+  // var texCoordsArray = [];
+
+  // var p = new Promise((resolve, reject) => {  
+
+  //   var xhr = new XMLHttpRequest();
+
+  //   xhr.open("GET", "./Crate1.obj");
+  //   xhr.send();
+
+  //   xhr.addEventListener("load", (data) => {
+  //     resolve(data.currentTarget.response);
+  //   });
+  // });
+  
+  // p.then(data => {
+  //   var objFile = new OBJFile(data);
+  //   const objFileData = objFile.parse();
+    
+
+  //   objCoordsArray.push(objFile.parse().models[0].vertices);
+  //   texCoordsArray.push(objFile.parse().models[0].textureCoords);
+    
+  // } );
+
 
 // class Uniform {
 //   uniformIndex_;
 //   constructor(shader, name);
 //   get();
 // }
-// class attribute {
-//   constructor (name) {
-//     this.name = name;
-//   }
 
-//   set 
-// }
 
 // class BaseBuffer {
 

@@ -52,11 +52,6 @@
       return w !== w.top;
     }
   
-    if (!isInIFrame()) {
-      console.log("%c%s", 'color:blue;font-weight:bold;', 'for more about webgl-utils.js see:');  // eslint-disable-line
-      console.log("%c%s", 'color:blue;font-weight:bold;', 'http://webgl2fundamentals.org/webgl/lessons/webgl-boilerplate.html');  // eslint-disable-line
-    }
-  
     /**
      * Wrapped logging function.
      * @param {string} msg The message to log.
