@@ -40,6 +40,9 @@ function main() {
 
   const program = new Program(gl,vertexShader,fragmentShader);
 
+  const parsedObj = new ObjFileLoader("./src/Crate1.obj");
+  console.log(parsedObj);
+
   const positionAttributeLocation = gl.getAttribLocation(program, "a_position");
   const colorAttributeLocation = gl.getAttribLocation(program, "a_color");
   

@@ -7,7 +7,18 @@ function assertType(instanceObject, instance) {
     } else if (!(instanceObject instanceof instance)) { //|| !(typeof instanceObject === instance)
         throw new Error(`got type ${typeof instanceObject} but expected ${instance};`);
     }
-  }
+}
+
+function assertFileExtension(pathToFile, reqExtension) {
+    if(typeof pathToFile === 'string' && typeof reqExtension === 'string'){
+        const fileExtension = pathToFile.slice(-(pathToFile.length - pathToFile.indexOf('.',1)));
+        if (fileExtension !== reqExtension) {
+            throw new Error(`got extension ${fileExtension} but expected ${reqExtension};`)
+        }
+    } else {
+        throw new Error(`got types ${typeof pathToFile} and ${typeof reqExtension} but expected String;`)
+    }
+}
 
 class Shader {
     constructor(gl, inputShaderType, shaderSource) {
@@ -42,7 +53,8 @@ class Program {
     }
 }
 
-class U {
+class Uniform {
+    
     constructor(gl, program, name){
         assertType(gl, WebGL2RenderingContext);
         assertType(program, WebGLProgram);
@@ -53,5 +65,32 @@ class U {
 
     get() {
         return this.attributeLocation;
+    }
+}
+
+
+class ObjFileLoader {
+    constructor(pathToFile) {
+        assertFileExtension(pathToFile,".obj");
+        const output = this;
+        const p = new Promise((resolve, reject) => {  
+
+            const xhr = new XMLHttpRequest();
+        
+            xhr.open("GET", pathToFile);
+            xhr.send();
+        
+            xhr.addEventListener("load", (data) => {
+              resolve(data.currentTarget.response);
+            });
+        });
+        p.then(data => {
+            const objFile = new OBJFile(data);
+            return objFile.parse().models[0];
+        }).then(result => output.info = result)
+    }
+
+    get() {
+        return this.info;
     }
 }
