@@ -68,7 +68,6 @@ class Uniform {
     }
 }
 
-
 class ObjFileLoader {
     constructor(pathToFile) {
         assertFileExtension(pathToFile,".obj");
