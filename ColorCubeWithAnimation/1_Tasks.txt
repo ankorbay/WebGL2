@@ -1,10 +1,16 @@
-- add camera view; - DONE
+DONE = (D)
+IN PROCESS = (IP)
+ON HOLD = (OH)
+
+TASKS:
+
+- add camera view; - DONE (D)
 - add camera control on keyboard (wasd); - DONE
 - create program and shader classes, intergrate into main.js - DONE
-- load cube data as obj. - ON HOLD
+- load cube data as obj. - ON HOLD (OH)
 - add texture and specular mask for it; - ON HOLD
-- add 1 directional light and 3 points. - ON HOLD
 
 TODAY:
 
-- load cube data as obj. - in process
+- load cube data as obj. - OH
+- add 1 directional light and 3 points. - IP

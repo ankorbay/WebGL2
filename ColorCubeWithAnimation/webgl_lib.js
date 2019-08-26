@@ -68,7 +68,7 @@ class Uniform {
     }
 }
 
-class ObjFileLoader {
+class FileLoader {
     constructor(pathToFile) {
         assertFileExtension(pathToFile,".obj");
         const output = this;

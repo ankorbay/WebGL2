@@ -1,17 +1,23 @@
 "use strict";
 
 var vertexShaderSource = `#version 300 es
-
+ 
+// an attribute is an input (in) to a vertex shader.
+// It will receive data from a buffer
 in vec4 a_position;
-in vec4 a_color;
-
+in vec3 a_normal;
+ 
 uniform mat4 u_matrix;
-
-out vec4 v_color;
-
+uniform mat4 u_world;
+ 
+out vec3 v_normal;
+ 
 void main() {
+  // Multiply the position by the matrix.
   gl_Position = u_matrix * a_position;
-  v_color = a_color;
+ 
+  // orient the normals and pass to the fragment shader
+  v_normal = mat3(u_world) * a_normal;
 }
 `;
 
@@ -19,12 +25,21 @@ var fragmentShaderSource = `#version 300 es
 
 precision mediump float;
 
-in vec4 v_color;
+in vec3 v_normal;
+
+uniform vec3 u_reverseLightDirection;
+uniform vec4 u_color;
 
 out vec4 outColor;
 
 void main() {
-  outColor = v_color;
+  vec3 normal = normalize(v_normal);
+
+  float light = dot(normal, u_reverseLightDirection);
+  
+  outColor = u_color;
+
+  outColor.rgb *= light;
 }
 `;
   
@@ -40,66 +55,40 @@ function main() {
 
   const program = new Program(gl,vertexShader,fragmentShader);
 
-  const parsedObj = new ObjFileLoader("./src/Crate1.obj");
+  const parsedObj = new FileLoader("./src/Crate1.obj");
   console.log(parsedObj);
 
   const positionAttributeLocation = gl.getAttribLocation(program, "a_position");
-  const colorAttributeLocation = gl.getAttribLocation(program, "a_color");
+  // const colorAttributeLocation = gl.getAttribLocation(program, "a_color");
+  const normalLocation = gl.getAttribLocation(program, "a_normal");
   
-  const matrixLocation = gl.getUniformLocation(program, "u_matrix");
+  const worldViewProjectionLocation = gl.getUniformLocation(program, "u_matrix");
+
+  var worldLocation = gl.getUniformLocation(program, "u_world");
+  var colorLocation = gl.getUniformLocation(program, "u_color");
+  var reverseLightDirectionLocation = gl.getUniformLocation(program, "u_reverseLightDirection");
+  
+  const vao = gl.createVertexArray();
   
   const positionBuffer = gl.createBuffer();
-
-  const vao = gl.createVertexArray();
-
   gl.bindVertexArray(vao);
-
   gl.enableVertexAttribArray(positionAttributeLocation);
-
   gl.bindBuffer(gl.ARRAY_BUFFER, positionBuffer);
+  setGeometry(gl);       
+  gl.vertexAttribPointer(positionAttributeLocation, 3, gl.FLOAT, false, 0, 0);
 
-  setGeometry(gl);
+  // const colorsBuffer = gl.createBuffer();
+  // gl.bindBuffer(gl.ARRAY_BUFFER, colorsBuffer);
+  // setColors(gl); 
+  // gl.enableVertexAttribArray(colorAttributeLocation);       
+  // gl.vertexAttribPointer(colorAttributeLocation, 3, gl.UNSIGNED_BYTE, true, 0, 0);
 
-  let size = 3;        
-  let type = gl.FLOAT;   
-  let normalize = false; 
-  let stride = 0;        
-  let offset = 0;        
-  gl.vertexAttribPointer(positionAttributeLocation, size, type, normalize, stride, offset);
+  const normalsBuffer = gl.createBuffer();
+  gl.bindBuffer(gl.ARRAY_BUFFER, normalsBuffer);
+  setNormals(gl);
+  gl.enableVertexAttribArray(normalLocation); 
+  gl.vertexAttribPointer(normalLocation, 3, gl.FLOAT, false, 0, 0);
 
-  const colorsBuffer = gl.createBuffer();
-  gl.bindBuffer(gl.ARRAY_BUFFER, colorsBuffer);
-  setColors(gl);
-  gl.enableVertexAttribArray(colorAttributeLocation);
-  
-  size = 3;
-  type = gl.UNSIGNED_BYTE;  
-  normalize = true;  
-  stride = 0;        
-  offset = 0;        
-  gl.vertexAttribPointer(colorAttributeLocation, size, type, normalize, stride, offset);
-
-  // const texture = gl.createTexture();
-
-  // // use texture unit 0
-  // gl.activeTexture(gl.TEXTURE0 + 0);
-
-  // // bind to the TEXTURE_2D bind point of texture unit 0
-  // gl.bindTexture(gl.TEXTURE_2D, texture);
-
-  // // Fill the texture with a 1x1 blue pixel.
-  // gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA, 1, 1, 0, gl.RGBA, gl.UNSIGNED_BYTE,
-  //               new Uint8Array([0, 0, 255, 255]));
-
-  // // Asynchronously load an image
-  // const image = new Image();
-  // image.src = "./container2.png";
-  // image.addEventListener('load', function() {
-  //   // Now that the image has loaded make copy it to the texture.
-  //   gl.bindTexture(gl.TEXTURE_2D, texture);
-  //   gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA, gl.RGBA, gl.UNSIGNED_BYTE, image);
-  //   gl.generateMipmap(gl.TEXTURE_2D);
-  // });
 
   function radToDeg(r) {
     return r * 180 / Math.PI;
@@ -111,6 +100,8 @@ function main() {
 
   const fieldOfViewRadians = degToRad(100);
   const cameraAngleRadians = degToRad(100);
+
+  let fRotationRadians = 0;
   
   const cameraPosition = [200,300,100];
 
@@ -175,11 +166,13 @@ function main() {
 
     const viewProjectionMatrix = m4.multiply(projectionMatrix,viewMatrix);
 
+    const worldMatrix = m4.yRotation(fRotationRadians);
+
     const translation = [450+100 * Math.cos(time*0.001), 250+100*Math.sin(time*0.001), 0];
     const rotation = [degToRad(360*Math.sin(time*0.0005)), degToRad(360*Math.sin(time*0.0001)), degToRad(360*Math.sin(time*0.0003))];
     const scaling = [Math.abs(Math.sin(time*0.001)),Math.abs(Math.sin(time*0.001)),Math.abs(Math.sin(time*0.001))];
 
-    let matrix = viewProjectionMatrix;
+    let matrix = m4.multiply(viewProjectionMatrix, worldMatrix);
 
     matrix = m4.translate(matrix, translation[0], translation[1], translation[2]);
     matrix = m4.xRotate(matrix, rotation[0]);
@@ -187,7 +180,10 @@ function main() {
     matrix = m4.zRotate(matrix, rotation[2]);
     matrix = m4.scale(matrix,scaling[0],scaling[1], scaling[2]);
 
-    gl.uniformMatrix4fv(matrixLocation, false, matrix);
+    gl.uniformMatrix4fv(worldViewProjectionLocation, false, matrix);
+    gl.uniformMatrix4fv(worldLocation, false, worldMatrix);
+    gl.uniform4fv(colorLocation, [0.2, 1, 0.2, 1]); // green
+    gl.uniform3fv(reverseLightDirectionLocation, normalize([0.5, 0.7, 1]));
 
     const primitiveType = gl.TRIANGLES;
     const offset = 0;
@@ -197,6 +193,59 @@ function main() {
     requestAnimationFrame(drawScene);
   }
   requestAnimationFrame(drawScene);
+}
+
+function setNormals(gl) {
+  var normals = new Float32Array([
+          // left column front
+          0, 0, 1,
+          0, 0, 1,
+          0, 0, 1,
+          0, 0, 1,
+          0, 0, 1,
+          0, 0, 1,
+ 
+          // left column back
+          0, 0, -1,
+          0, 0, -1,
+          0, 0, -1,
+          0, 0, -1,
+          0, 0, -1,
+          0, 0, -1,
+ 
+          // top
+          0, 1, 0,
+          0, 1, 0,
+          0, 1, 0,
+          0, 1, 0,
+          0, 1, 0,
+          0, 1, 0,
+ 
+          // under top rung
+          0, -1, 0,
+          0, -1, 0,
+          0, -1, 0,
+          0, -1, 0,
+          0, -1, 0,
+          0, -1, 0,
+ 
+          // between top rung and middle
+          1, 0, 0,
+          1, 0, 0,
+          1, 0, 0,
+          1, 0, 0,
+          1, 0, 0,
+          1, 0, 0,
+ 
+          // left side
+          -1, 0, 0,
+          -1, 0, 0,
+          -1, 0, 0,
+          -1, 0, 0,
+          -1, 0, 0,
+          -1, 0, 0,
+  ]);
+  gl.bufferData(gl.ARRAY_BUFFER, normals, gl.STATIC_DRAW);
 }
 
 // Construct the cube from triangles
@@ -254,55 +303,55 @@ function setGeometry(gl) {
       gl.STATIC_DRAW);
 }
 
-// Fill the current ARRAY_BUFFER buffer with colors for the cube.
-function setColors(gl) {
-  gl.bufferData(
-      gl.ARRAY_BUFFER,
-      new Uint8Array([
-        50,  70, 0,
-        50,  70, 0,
-        50,  70, 0,
-        50,  70, 0,
-        50,  70, 0,
-        50,  70, 0,
+// // Fill the current ARRAY_BUFFER buffer with colors for the cube.
+// function setColors(gl) {
+//   gl.bufferData(
+//       gl.ARRAY_BUFFER,
+//       new Uint8Array([
+//         50,  70, 0,
+//         50,  70, 0,
+//         50,  70, 0,
+//         50,  70, 0,
+//         50,  70, 0,
+//         50,  70, 0,
 
-        80, 70, 50,
-        80, 70, 50,
-        80, 70, 50,
-        80, 70, 50,
-        80, 70, 50,
-        80, 70, 50,
+//         80, 70, 50,
+//         80, 70, 50,
+//         80, 70, 50,
+//         80, 70, 50,
+//         80, 70, 50,
+//         80, 70, 50,
           
-        70, 50, 210,
-        70, 50, 210,
-        70, 50, 210,
-        70, 50, 210,
-        70, 50, 210,
-        70, 50, 210,
+//         70, 50, 210,
+//         70, 50, 210,
+//         70, 50, 210,
+//         70, 50, 210,
+//         70, 50, 210,
+//         70, 50, 210,
 
-        50, 50, 70,
-        50, 50, 70,
-        50, 50, 70,
-        50, 50, 70,
-        50, 50, 70,
-        50, 50, 70,
+//         50, 50, 70,
+//         50, 50, 70,
+//         50, 50, 70,
+//         50, 50, 70,
+//         50, 50, 70,
+//         50, 50, 70,
 
-        20, 100, 70,
-        20, 100, 70,
-        20, 100, 70,
-        20, 100, 70,
-        20, 100, 70,
-        20, 100, 70,
+//         20, 100, 70,
+//         20, 100, 70,
+//         20, 100, 70,
+//         20, 100, 70,
+//         20, 100, 70,
+//         20, 100, 70,
 
-        80, 0, 50,
-        80, 0, 50,
-        80, 0, 50,
-        80, 0, 50,
-        80, 0, 50,
-        80, 0, 50,
-      ]),
-      gl.STATIC_DRAW);
-}
+//         80, 0, 50,
+//         80, 0, 50,
+//         80, 0, 50,
+//         80, 0, 50,
+//         80, 0, 50,
+//         80, 0, 50,
+//       ]),
+//       gl.STATIC_DRAW);
+// }
 
 const m4 = {
 
