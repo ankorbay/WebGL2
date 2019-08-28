@@ -1,3 +1,5 @@
+import LoadManager from "./Loader.js";
+
 "use strict";
 
 var vertexShaderSource = `#version 300 es
@@ -34,7 +36,7 @@ out vec4 outColor;
 
 void main() {
   vec3 normal = normalize(v_normal);
-
+ 
   float light = dot(normal, u_reverseLightDirection);
   
   outColor = u_color;
@@ -42,7 +44,14 @@ void main() {
   outColor.rgb *= light;
 }
 `;
-  
+
+function parseObj(data) {
+  return new Promise((resolve, reject) => {
+    const objFileData = new OBJFile(String(data));
+      resolve(objFileData.parse());
+  })
+}
+
 function main() {
   const canvas = document.getElementById("canvas");
   const gl = canvas.getContext("webgl2");
@@ -55,8 +64,12 @@ function main() {
 
   const program = new Program(gl,vertexShader,fragmentShader);
 
-  const parsedObj = new FileLoader("./src/Crate1.obj");
-  console.log(parsedObj);
+  LoadManager.loadRecursive("./src/Crate1.obj")
+    .then(parseObj)
+    .then(parsedData => console.log(parsedData));
+
+  // const parsedObj = new FileLoader("./src/Crate1.obj");
+  // console.log(parsedObj);
 
   const positionAttributeLocation = gl.getAttribLocation(program, "a_position");
   // const colorAttributeLocation = gl.getAttribLocation(program, "a_color");
@@ -183,7 +196,7 @@ function main() {
     gl.uniformMatrix4fv(worldViewProjectionLocation, false, matrix);
     gl.uniformMatrix4fv(worldLocation, false, worldMatrix);
     gl.uniform4fv(colorLocation, [0.2, 1, 0.2, 1]); // green
-    gl.uniform3fv(reverseLightDirectionLocation, normalize([0.5, 0.7, 1]));
+    gl.uniform3fv(reverseLightDirectionLocation, m4.normalize([0.5, 0.7, 1]));
 
     const primitiveType = gl.TRIANGLES;
     const offset = 0;
@@ -195,7 +208,7 @@ function main() {
   requestAnimationFrame(drawScene);
 }
 
-function setNormals(gl) {
+function setNormals(gl, normalsArr) {
   var normals = new Float32Array([
           // left column front
           0, 0, 1,
